@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guitar Buddy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080a11; --card: rgba(255,255,255,.045); --card-b: rgba(255,255,255,.09); --card-h: rgba(255,255,255,.07);
+    --text: #eef0f7; --muted: #98a1b8; --a1: #ffb347; --a2: #ff5e8a; --a3: #7c5cff; --teal: #3ee0c2;
+    --good: #3ee08a; --bad: #ff5e6c;
+    --grad: linear-gradient(135deg, var(--a1), var(--a2));
+    --r: 20px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh;
+    font: 16px/1.55 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
+
+  /* animated background */
+  .bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+  .bg i { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .45; animation: drift 22s ease-in-out infinite alternate; }
+  .bg i:nth-child(1) { width: 480px; height: 480px; background: var(--a3); top: -140px; left: -120px; }
+  .bg i:nth-child(2) { width: 420px; height: 420px; background: var(--a2); bottom: -160px; right: -100px; animation-duration: 28s; opacity: .32; }
+  .bg i:nth-child(3) { width: 340px; height: 340px; background: var(--teal); top: 40%; left: 55%; animation-duration: 34s; opacity: .18; }
+  @keyframes drift { to { transform: translate(90px, 60px) scale(1.15); } }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 18px 60px; }
+
+  /* hero */
+  .hero { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 30px 0 14px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .logo { width: 54px; height: 54px; border-radius: 16px; background: var(--grad); display: grid; place-items: center;
+    font-size: 30px; box-shadow: 0 8px 30px rgba(255,94,138,.4); animation: bob 4s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-4px) rotate(-6deg); } }
+  .brand h1 { margin: 0; font-size: 30px; letter-spacing: -.5px; line-height: 1.1; }
+  .brand h1 span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  #hero-strings { width: 300px; max-width: 100%; height: 58px; cursor: pointer; }
+  #hero-strings path { fill: none; stroke-linecap: round; }
+  #hero-strings .hit { stroke: transparent; stroke-width: 12; fill: none; }
+  .hint { color: var(--muted); font-size: 12px; text-align: right; margin-top: -2px; }
+
+  /* tabs */
+  .tabs-wrap { overflow-x: auto; padding: 4px 0 14px; scrollbar-width: none; }
+  .tabs { position: relative; display: inline-flex; gap: 2px; padding: 5px; background: var(--card); border: 1px solid var(--card-b);
+    border-radius: 999px; backdrop-filter: blur(12px); }
+  .tab { position: relative; z-index: 1; background: none; border: 0; color: var(--muted); font: 600 15px Inter, sans-serif;
+    padding: 10px 20px; border-radius: 999px; cursor: pointer; white-space: nowrap; transition: color .25s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: #1a0f08; }
+  .pill { position: absolute; z-index: 0; top: 5px; bottom: 5px; left: 5px; width: 90px; border-radius: 999px; background: var(--grad);
+    box-shadow: 0 6px 22px rgba(255,94,138,.4); transition: left .4s cubic-bezier(.3,1.35,.5,1), width .4s cubic-bezier(.3,1.35,.5,1); }
+
+  section[hidden] { display: none; }
+  section:not([hidden]) { animation: enter .5s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes enter { from { opacity: 0; transform: translateY(18px); } }
+
+  .panel { background: var(--card); border: 1px solid var(--card-b); border-radius: var(--r); padding: 22px;
+    backdrop-filter: blur(14px); box-shadow: 0 12px 40px rgba(0,0,0,.3); margin-bottom: 18px; }
+  .panel > h2:first-child, .panel > h3:first-child { margin-top: 0; }
+  h2 { font-size: 22px; letter-spacing: -.3px; margin: 0 0 12px; }
+  h3 { font-size: 16px; margin: 0 0 10px; color: var(--a1); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; }
+  .muted { color: var(--muted); } .small { font-size: 13.5px; }
+  .grid2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; }
+  .grid2.even { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 800px) { .grid2, .grid2.even { grid-template-columns: 1fr; } .nownext { grid-template-columns: 1fr !important; } }
+  .stack > .panel:last-child { margin-bottom: 0; }
+
+  /* buttons */
+  .btn { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; padding: 11px 20px; cursor: pointer;
+    font: 700 15px Inter, sans-serif; color: #1a0f08; background: var(--grad); box-shadow: 0 6px 22px rgba(255,94,138,.3);
+    transition: transform .2s, box-shadow .2s, opacity .2s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,94,138,.45); }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn.ghost { background: var(--card); color: var(--text); box-shadow: none; border: 1px solid var(--card-b); font-weight: 600; }
+  .btn.ghost:hover:not(:disabled) { background: var(--card-h); box-shadow: none; }
+  .btn.rec { background: var(--bad); color: #fff; }
+  .btn.rec.on { animation: recpulse 1.2s infinite; }
+  @keyframes recpulse { 0% { box-shadow: 0 0 0 0 rgba(255,94,108,.7); } 100% { box-shadow: 0 0 0 16px rgba(255,94,108,0); } }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+  select { background: var(--card); color: var(--text); border: 1px solid var(--card-b); border-radius: 12px; padding: 9px 12px; font: 500 14px Inter, sans-serif; }
+  select option { background: #151824; }
+  input[type=checkbox] { accent-color: var(--a2); width: 17px; height: 17px; }
+  label.chk { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14.5px; }
+  .status { min-height: 22px; color: var(--a1); font-size: 14.5px; }
+  .status.err { color: var(--bad); }
+
+  /* learn */
+  .steps7 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; counter-reset: s; }
+  .step { position: relative; background: var(--card); border: 1px solid var(--card-b); border-radius: 18px; padding: 18px 18px 18px 70px;
+    transition: transform .25s, background .25s, border-color .25s; animation: enter .6s both; }
+  .step:hover { transform: translateY(-4px); background: var(--card-h); border-color: rgba(255,179,71,.4); }
+  .step::before { counter-increment: s; content: counter(s); position: absolute; left: 16px; top: 16px; width: 40px; height: 40px;
+    border-radius: 12px; background: var(--grad); color: #1a0f08; font-weight: 800; font-size: 20px; display: grid; place-items: center; }
+  .step b.t { display: block; font-size: 17px; margin-bottom: 2px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .step p b { color: var(--text); }
+
+  .chord-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+  .chord-card { position: relative; margin: 0; background: var(--card); border: 1px solid var(--card-b); border-radius: 18px; padding: 12px 10px 14px;
+    text-align: center; cursor: pointer; transition: transform .25s, border-color .25s, background .25s; user-select: none; }
+  .chord-card:hover { transform: translateY(-5px) scale(1.02); border-color: rgba(255,179,71,.55); background: var(--card-h); }
+  .chord-card.ring { animation: ring .9s ease-out; }
+  @keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(255,179,71,.7); } 100% { box-shadow: 0 0 0 22px rgba(255,179,71,0); } }
+  .chord-card figcaption b { font-size: 22px; display: block; }
+  .chord-card figcaption span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+  .chord-card .play { position: absolute; top: 10px; right: 10px; font-size: 12px; color: var(--a1); opacity: .8; }
+  .chord-svg { width: 100%; max-width: 124px; height: auto; display: block; margin: 0 auto; }
+  .chord-svg .fb { fill: rgba(255,255,255,.035); }
+  .chord-svg line { stroke: rgba(255,255,255,.28); stroke-width: 1; }
+  .chord-svg .nut { fill: var(--text); }
+  .chord-svg .dot { fill: url(#dotgrad); transform-box: fill-box; transform-origin: center; animation: pop .45s cubic-bezier(.3,1.7,.5,1) both; animation-delay: calc(var(--i, 0) * 55ms); }
+  .chord-svg .open { fill: none; stroke: var(--teal); stroke-width: 1.6; }
+  .chord-svg .mute { fill: var(--muted); font: 700 11px Inter, sans-serif; }
+  .chord-svg .fretnum { font: 700 10px Inter, sans-serif; fill: var(--a1); }
+  @keyframes pop { from { transform: scale(0); opacity: 0; } }
+
+  .practice-list { list-style: none; margin: 0; padding: 0; }
+  .practice-list li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 12px; border-radius: 12px; margin-bottom: 6px;
+    background: rgba(255,255,255,.03); border: 1px solid transparent; transition: all .3s; font-size: 14.5px; }
+  .practice-list li.now { border-color: var(--a1); background: rgba(255,179,71,.1); transform: translateX(4px); }
+  .practice-list li.done { opacity: .45; text-decoration: line-through; }
+  .bar { height: 8px; background: rgba(255,255,255,.08); border-radius: 8px; overflow: hidden; margin: 12px 0 4px; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--grad); border-radius: 8px; transition: width .4s linear; }
+
+  /* camera */
+  .camwrap { position: relative; background: #05060a; border-radius: 18px; overflow: hidden; aspect-ratio: 4/3; border: 1px solid var(--card-b); }
+  .camwrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .camwrap video.mirror { transform: scaleX(-1); }
+  .camwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .placeholder { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--muted); padding: 24px; }
+  .placeholder .ico { font-size: 54px; display: block; animation: bob 3s ease-in-out infinite; }
+  .live-badge { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,.55); border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700;
+    display: none; align-items: center; gap: 6px; backdrop-filter: blur(6px); }
+  .live-badge::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--bad); animation: blink 1s infinite; }
+  .camwrap.on .live-badge { display: flex; }
+  @keyframes blink { 50% { opacity: .2; } }
+  .timer { font-variant-numeric: tabular-nums; color: var(--bad); font-weight: 700; }
+  #rec-preview { width: 100%; border-radius: 14px; margin-top: 8px; background: #000; }
+
+  canvas.spec { width: 100%; height: 90px; display: block; border-radius: 12px; background: rgba(0,0,0,.25); }
+  .meter { height: 8px; background: rgba(255,255,255,.08); border-radius: 8px; overflow: hidden; margin: 8px 0; }
+  .meter > i { display: block; height: 100%; width: 0; border-radius: 8px; background: linear-gradient(90deg, var(--teal), var(--a1), var(--a2)); transition: width .06s; }
+  .live-read { display: flex; align-items: center; gap: 16px; margin-top: 8px; }
+  .live-read .chord-svg { max-width: 84px; margin: 0; }
+  .bigchord { font-size: 44px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+  .bigchord.idle { color: var(--muted); }
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+  .pillb { border: 1px solid var(--card-b); background: var(--card); color: var(--text); border-radius: 999px; padding: 7px 16px; font: 700 15px Inter, sans-serif; cursor: pointer; transition: all .2s; }
+  .pillb:hover { background: var(--card-h); transform: translateY(-2px); }
+  .pillb.sel { background: var(--grad); color: #1a0f08; border-color: transparent; }
+  .target { text-align: center; padding: 14px; border-radius: 16px; border: 2px dashed var(--card-b); transition: all .3s; margin-top: 8px; }
+  .target.ok { border: 2px solid var(--good); background: rgba(62,224,138,.1); animation: ring2 .8s ease-out; }
+  @keyframes ring2 { 0% { box-shadow: 0 0 0 0 rgba(62,224,138,.6); } 100% { box-shadow: 0 0 0 26px rgba(62,224,138,0); } }
+  .target .chord-svg { max-width: 100px; }
+  .checklist { list-style: none; padding: 0; margin: 0; }
+  .checklist li { margin-bottom: 8px; }
+  .checklist label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 14.5px; color: var(--muted); transition: color .2s; }
+  .checklist input:checked + span { color: var(--good); text-decoration: line-through; }
+
+  /* tuner */
+  .gauge { width: 100%; max-width: 440px; display: block; margin: 0 auto; }
+  .gauge .needle { transform-origin: 150px 150px; transition: transform .12s cubic-bezier(.3,1.3,.5,1); }
+  .gauge .zone { fill: none; stroke: rgba(62,224,138,.35); stroke-width: 16; }
+  .gauge .track { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 16; stroke-linecap: round; }
+  .gauge.ok .zone { stroke: var(--good); filter: drop-shadow(0 0 8px var(--good)); }
+  .gauge text { fill: var(--muted); font: 600 11px Inter, sans-serif; }
+  .tn { text-align: center; margin-top: -38px; }
+  .tn b { font-size: 64px; font-weight: 800; line-height: 1; letter-spacing: -2px; display: block; }
+  .tn span { color: var(--muted); }
+  .tmsg { text-align: center; min-height: 28px; font-weight: 600; margin: 10px 0; }
+  .strings { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .strings button { position: relative; background: var(--card); color: var(--text); border: 1px solid var(--card-b); border-radius: 14px; padding: 12px 2px 10px;
+    cursor: pointer; font: 500 13px Inter, sans-serif; transition: all .2s; overflow: hidden; }
+  .strings button:hover { background: var(--card-h); transform: translateY(-3px); }
+  .strings button b { display: block; font-size: 22px; }
+  .strings button small { color: var(--muted); font-size: 11px; }
+  .strings button.hit { border-color: var(--good); box-shadow: inset 0 0 0 2px var(--good); }
+  .strings button.vib { animation: vib .5s ease-out; }
+  @keyframes vib { 0%,100% { transform: none; } 10% { transform: translateX(-4px); } 25% { transform: translateX(4px); } 40% { transform: translateX(-3px); } 55% { transform: translateX(3px); } 70% { transform: translateX(-1px); } }
+
+  /* analyze */
+  .drop { border: 2px dashed rgba(255,255,255,.18); border-radius: 24px; padding: 38px 20px; text-align: center; background: var(--card);
+    transition: all .25s; margin-bottom: 18px; }
+  .drop.over { border-color: var(--a1); background: rgba(255,179,71,.08); transform: scale(1.01); }
+  .drop .big { font-size: 52px; display: block; animation: bob 3s ease-in-out infinite; }
+  .drop h2 { margin: 6px 0 4px; }
+  progress { appearance: none; width: 100%; max-width: 420px; height: 10px; border: 0; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,.1); }
+  progress::-webkit-progress-bar { background: rgba(255,255,255,.1); }
+  progress::-webkit-progress-value { background: var(--grad); border-radius: 10px; transition: width .2s; }
+  progress::-moz-progress-bar { background: var(--a2); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .stat { background: var(--card); border: 1px solid var(--card-b); border-radius: 18px; padding: 14px 16px; animation: enter .6s both; transition: transform .25s, border-color .25s; }
+  .stat:hover { transform: translateY(-4px); border-color: rgba(255,179,71,.4); }
+  .stat small { color: var(--muted); display: block; font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .stat b { font-size: 24px; font-weight: 800; letter-spacing: -.5px; display: flex; align-items: center; gap: 8px; }
+  .stat .em { font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: 0; }
+  .beat-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--a2); animation: beatp var(--beat, .5s) infinite ease-out; }
+  @keyframes beatp { 0% { box-shadow: 0 0 0 0 rgba(255,94,138,.8); transform: scale(1.25); } 100% { box-shadow: 0 0 0 14px rgba(255,94,138,0); transform: scale(1); } }
+  .dmeter { display: flex; gap: 4px; margin-left: 4px; }
+  .dmeter i { width: 10px; height: 18px; border-radius: 4px; background: rgba(255,255,255,.12); }
+  .dmeter i.f { background: var(--grad); }
+
+  #player { width: 100%; max-height: 340px; border-radius: 16px; background: #000; display: block; }
+  #player.audio-only { height: 54px; }
+  .nownext { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+  .nn { text-align: center; border-radius: 18px; padding: 14px; background: rgba(255,255,255,.03); border: 1px solid var(--card-b); min-height: 220px; }
+  .nn.now { border-color: rgba(255,179,71,.6); background: rgba(255,179,71,.07); }
+  .nn h4 { margin: 0 0 6px; font-size: 12px; letter-spacing: 3px; color: var(--muted); }
+  .nn.now h4 { color: var(--a1); }
+  .nn .chord-svg { max-width: 120px; }
+  .nn.now .chord-svg { max-width: 160px; }
+  .big-name { font-size: 40px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; }
+  .nn:not(.now) .big-name { font-size: 26px; }
+  .nn .sub { color: var(--muted); font-size: 13px; }
+  .big-empty { font-size: 44px; color: var(--muted); padding-top: 50px; }
+  .swap { animation: swap .35s cubic-bezier(.3,1.4,.5,1); }
+  @keyframes swap { from { opacity: 0; transform: scale(.85) translateY(10px); } }
+
+  .tl { margin-bottom: 12px; }
+  .tl small { display: block; color: var(--muted); font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .tl canvas { width: 100%; display: block; border-radius: 12px; background: rgba(0,0,0,.28); cursor: pointer; }
+  #wave { height: 110px; } #chroma { height: 140px; } #energy { height: 64px; }
+  .chips { position: relative; display: flex; gap: 8px; overflow-x: auto; padding: 8px 2px 12px; scrollbar-width: thin; }
+  .chip { flex: 0 0 auto; background: var(--card); color: var(--text); border: 1px solid var(--card-b); border-radius: 14px; padding: 7px 14px; cursor: pointer;
+    text-align: center; transition: all .25s; font-family: inherit; }
+  .chip:hover { transform: translateY(-3px); }
+  .chip b { display: block; font-size: 18px; }
+  .chip small { color: var(--muted); font-size: 12px; }
+  .chip.active { background: var(--grad); color: #1a0f08; border-color: transparent; transform: scale(1.1); box-shadow: 0 6px 20px rgba(255,94,138,.4); }
+  .chip.active small { color: #4a2312; }
+
+  .usage { display: grid; grid-template-columns: 54px 1fr 46px; gap: 10px; align-items: center; margin-bottom: 8px; font-size: 14px; }
+  .usage b { font-size: 16px; }
+  .usage .track { height: 14px; background: rgba(255,255,255,.07); border-radius: 8px; overflow: hidden; }
+  .usage .track i { display: block; height: 100%; width: var(--w); border-radius: 8px; background: var(--grad); animation: grow .9s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--d, 0s); }
+  @keyframes grow { from { width: 0; } }
+  .loopbox { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0 14px; }
+  .loopbox .lc { background: rgba(124,92,255,.18); border: 1px solid rgba(124,92,255,.5); padding: 4px 12px; border-radius: 10px; font-weight: 800; }
+  .loopbox .ar { color: var(--muted); }
+  ol.steps { margin: 0; padding-left: 22px; } ol.steps li { margin-bottom: 9px; color: #d6dbea; } ol.steps li b { color: #fff; }
+  .beats { display: inline-flex; gap: 6px; }
+  .beats i { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,.15); transition: all .08s; }
+  .beats i.on { background: var(--a1); transform: scale(1.5); box-shadow: 0 0 12px var(--a1); }
+  .note { border-left: 4px solid var(--a1); background: rgba(255,179,71,.07); border-radius: 12px; padding: 12px 16px; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="dotgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5e8a"/></linearGradient>
+</defs></svg>
+<div class="bg"><i></i><i></i><i></i></div>
+
+<div class="wrap">
+<header class="hero">
+  <div class="brand">
+    <div class="logo">🎸</div>
+    <div><h1>Guitar <span>Buddy</span></h1><p>Learn · See yourself · Tune · Analyze any song</p></div>
+  </div>
+  <div><svg id="hero-strings" viewBox="0 0 300 58" aria-label="Pluck the strings"></svg><div class="hint">☝ hover or click the strings</div></div>
+</header>
+
+<div class="tabs-wrap"><nav class="tabs" role="tablist">
+  <span class="pill" id="pill"></span>
+  <button class="tab active" data-tab="learn" role="tab">📘 Learn</button>
+  <button class="tab" data-tab="camera" role="tab">📷 Camera</button>
+  <button class="tab" data-tab="tuner" role="tab">🎚️ Tuner</button>
+  <button class="tab" data-tab="analyze" role="tab">📊 Analyze a song</button>
+</nav></div>
+
+<main>
+<!-- ================= LEARN ================= -->
+<section id="tab-learn">
+  <div class="panel">
+    <h2>Play guitar in 7 simple steps</h2>
+    <div class="steps7">
+      <div class="step" style="animation-delay:.05s"><b class="t">Sit &amp; hold it</b><p>Sit up straight. Guitar body on your <b>right thigh</b> (left if left-handed), neck pointing slightly up, strumming forearm on top of the body.</p></div>
+      <div class="step" style="animation-delay:.1s"><b class="t">Know the 6 strings</b><p>Thickest → thinnest: <b>E · A · D · G · B · e</b>. Trick: <i>"Eddie Ate Dynamite, Good Bye Eddie"</i>.</p></div>
+      <div class="step" style="animation-delay:.15s"><b class="t">Tune it</b><p>Open the <b>Tuner</b> tab. An out-of-tune guitar sounds bad even when you play right.</p></div>
+      <div class="step" style="animation-delay:.2s"><b class="t">Press the strings right</b><p>Use the <b>tip</b> of each finger just behind the fret. Thumb behind the neck, fingers curved. Sore fingertips for 1–2 weeks is normal.</p></div>
+      <div class="step" style="animation-delay:.25s"><b class="t">Learn first chords</b><p>Start with <b>Em</b> &amp; <b>Am</b>, then <b>C, G, D</b>. Dots = press, <b>○</b> = open string, <b>×</b> = skip it.</p></div>
+      <div class="step" style="animation-delay:.3s"><b class="t">Strum</b><p>Loose wrist, like shaking water off your hand. First <b>down</b> only, counting <b>1-2-3-4</b>. Later: D, DU, UDU.</p></div>
+      <div class="step" style="animation-delay:.35s"><b class="t">Change chords slowly</b><p>Switch Em ↔ Am for a minute while strumming in time. Keep going even if it's messy. <b>10 min every day</b> beats 2 hours once a week.</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Your first chords <span class="muted small">· tap a card to hear it</span></h2>
+    <p class="muted small" style="margin-top:-6px">Finger numbers: 1 index · 2 middle · 3 ring · 4 pinky. Thickest string is on the left.</p>
+    <div class="chord-grid" id="learn-chords"></div>
+  </div>
+
+  <div class="grid2 even">
+    <div class="panel">
+      <h2>⏱ 11-minute practice routine</h2>
+      <ul class="practice-list" id="routine"></ul>
+      <div class="bar"><i id="routine-bar"></i></div>
+      <div class="row"><button class="btn" id="routine-btn">▶ Start routine</button><span class="muted" id="routine-time"></span></div>
+    </div>
+    <div class="panel note" style="display:flex;flex-direction:column;justify-content:center">
+      <h2>What next?</h2>
+      <p class="muted" style="margin:0 0 10px">Check your posture in the <b>Camera</b> tab. It also listens and tells you when you play a chord correctly.</p>
+      <p class="muted" style="margin:0">Then drop a song into <b>Analyze</b>. You get the chords, key, tempo, difficulty and a follow-along view.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CAMERA ================= -->
+<section id="tab-camera" hidden>
+  <div class="grid2">
+    <div class="stack">
+      <div class="panel">
+        <div class="camwrap" id="camwrap">
+          <video id="cam-video" muted playsinline class="mirror"></video>
+          <canvas id="cam-overlay"></canvas>
+          <div class="live-badge">LIVE</div>
+          <div class="placeholder" id="cam-placeholder"><div><span class="ico">📷</span>Press <b>Start camera</b> and click <b>Allow</b><br><span class="small">Your video never leaves this computer</span></div></div>
+        </div>
+        <div class="row">
+          <button class="btn" id="cam-start">📷 Start camera</button>
+          <button class="btn ghost" id="cam-stop" disabled>Stop</button>
+          <select id="cam-device" title="Choose camera" hidden></select>
+        </div>
+        <div class="row">
+          <label class="chk"><input type="checkbox" id="cam-mirror" checked> Mirror</label>
+          <label class="chk"><input type="checkbox" id="cam-guide" checked> Guide lines</label>
+          <button class="btn ghost" id="cam-snap" disabled>📸 Photo</button>
+          <button class="btn rec" id="cam-rec" disabled>⏺ Record</button>
+          <span class="timer" id="cam-timer"></span>
+        </div>
+        <div class="status" id="cam-status"></div>
+        <div id="rec-box" hidden>
+          <h3>Your recording</h3>
+          <video id="rec-preview" controls playsinline></video>
+          <div class="row">
+            <button class="btn" id="rec-analyze">🔍 Analyze this recording</button>
+            <a class="btn ghost" id="rec-save" download="my-guitar.webm">💾 Save</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="panel">
+        <h3>🎧 Live listening</h3>
+        <canvas class="spec" id="live-spec"></canvas>
+        <div class="meter"><i id="live-level"></i></div>
+        <div class="live-read">
+          <div id="live-diagram"></div>
+          <div><div class="bigchord idle" id="live-chord">–</div><div class="muted small" id="live-note">Start the camera, then strum a chord</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>🎯 Chord checker</h3>
+        <p class="muted small" style="margin-top:0">Pick a chord, then play it. The app tells you when it hears it.</p>
+        <div class="pills" id="target-pills"></div>
+        <div class="target" id="target"><div class="muted small">Choose a chord above</div></div>
+        <div class="row"><span class="muted small">Correct chords: <b id="streak" style="color:var(--good)">0</b></span></div>
+      </div>
+      <div class="panel">
+        <h3>✅ Posture checklist</h3>
+        <ul class="checklist">
+          <li><label><input type="checkbox"><span>Back straight, shoulders relaxed</span></label></li>
+          <li><label><input type="checkbox"><span>Thumb behind the neck</span></label></li>
+          <li><label><input type="checkbox"><span>Fingertips (not flat) just behind the frets</span></label></li>
+          <li><label><input type="checkbox"><span>Strumming wrist loose</span></label></li>
+          <li><label><input type="checkbox"><span>Neck lined up with the dashed guide</span></label></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TUNER ================= -->
+<section id="tab-tuner" hidden>
+  <div class="grid2">
+    <div class="panel">
+      <div class="row" style="margin-top:0"><button class="btn" id="tuner-start">🎤 Start tuner</button><button class="btn ghost" id="tuner-stop" disabled>Stop</button></div>
+      <svg class="gauge" id="gauge" viewBox="0 0 300 175">
+        <path class="track" d="M 30 150 A 120 120 0 0 1 270 150"/>
+        <path class="zone" id="gzone" d=""/>
+        <g id="ticks"></g>
+        <g class="needle" id="needle"><line x1="150" y1="150" x2="150" y2="42" stroke="url(#dotgrad)" stroke-width="4" stroke-linecap="round"/><circle cx="150" cy="150" r="9" fill="#fff"/></g>
+        <text x="30" y="172" text-anchor="middle">♭ low</text><text x="150" y="172" text-anchor="middle">in tune</text><text x="270" y="172" text-anchor="middle">high ♯</text>
+      </svg>
+      <div class="tn"><b id="tuner-note">–</b><span id="tuner-hz">Press start, then pluck one string</span></div>
+      <div class="tmsg" id="tuner-msg"></div>
+      <div class="status" id="tuner-status"></div>
+      <h3>Tap a string to hear it</h3>
+      <div class="strings" id="tuner-strings"></div>
+    </div>
+    <div class="panel">
+      <h2>Tuning steps</h2>
+      <ol class="steps">
+        <li>Press <b>Start tuner</b> and click <b>Allow</b> for the microphone.</li>
+        <li>Pluck <b>one open string</b> (no fret pressed). Let it ring.</li>
+        <li>Needle <b>left</b> = too low → <b>tighten</b> the peg a little.</li>
+        <li>Needle <b>right</b> = too high → <b>loosen</b> a little.</li>
+        <li>When it glows <b style="color:var(--good)">green</b>, that string is done.</li>
+        <li>Go thickest → thinnest: <b>E, A, D, G, B, e</b>, then re-check the first.</li>
+      </ol>
+      <p class="muted small">Prefer tuning by ear? Tap a string button to hear the right note and match it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ANALYZE ================= -->
+<section id="tab-analyze" hidden>
+  <div class="drop" id="drop">
+    <span class="big">🎵</span>
+    <h2>Drop a video or audio file</h2>
+    <p class="muted small" style="margin:0 0 14px">mp3 · wav · m4a · mp4 · webm … a song, or your own playing</p>
+    <div class="row" style="justify-content:center;margin:0">
+      <label class="btn" for="file-input">📂 Choose file</label>
+      <input type="file" id="file-input" accept="audio/*,video/*" hidden>
+      <button class="btn ghost" id="use-recording" disabled>Use my camera recording</button>
+    </div>
+    <div class="status" id="an-status" style="margin-top:12px"></div>
+    <progress id="an-progress" max="1" value="0" hidden></progress>
+  </div>
+
+  <div id="results" hidden>
+    <div class="stats" id="cards"></div>
+
+    <div class="grid2">
+      <div class="panel">
+        <video id="player" controls playsinline></video>
+        <canvas class="spec" id="viz" style="margin-top:10px"></canvas>
+        <div class="row">
+          <label class="muted small">Speed
+            <select id="speed"><option value="0.5">0.5× slow</option><option value="0.75">0.75×</option><option value="1" selected>1× normal</option></select></label>
+          <label class="chk" id="capo-row" hidden><input type="checkbox" id="capo-toggle" checked> Use capo</label>
+          <button class="btn ghost" id="metro-btn">🥁 Metronome</button>
+          <span class="beats" id="beats"><i></i><i></i><i></i><i></i></span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Follow along</h3>
+        <div class="nownext"><div class="nn now"><h4>PLAY NOW</h4><div id="now"></div></div><div class="nn"><h4>NEXT</h4><div id="next"></div></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Song timeline <span class="muted small" style="text-transform:none;letter-spacing:0">· click anywhere to jump</span></h3>
+      <div class="tl"><small>Waveform &amp; chords</small><canvas id="wave"></canvas></div>
+      <div class="tl"><small>Notes heard (chromagram: C at the bottom → B at the top)</small><canvas id="chroma"></canvas></div>
+      <div class="tl"><small>Loudness / energy</small><canvas id="energy"></canvas></div>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="grid2 even">
+      <div class="panel">
+        <h3>Chord usage</h3>
+        <div id="loopbox"></div>
+        <div id="usage"></div>
+      </div>
+      <div class="panel">
+        <h3>How to play it</h3>
+        <ol class="steps" id="steps"></ol>
+        <p class="muted small">Analysis is an estimate. It works best on clear guitar or singer-songwriter music.</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Chords to learn <span class="muted small" style="text-transform:none;letter-spacing:0">· tap to hear</span></h3>
+      <div class="chord-grid" id="learn-shapes"></div>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+
+<script src="analyzer.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
